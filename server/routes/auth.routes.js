@@ -1,0 +1,10 @@
+const r = require('express').Router();
+const c = require('../controllers/auth.controller');
+const { protect } = require('../middleware/auth');
+const asyncHandler = require('../middleware/asyncHandler');
+r.post('/login', asyncHandler(c.login));
+r.post('/refresh', asyncHandler(c.refresh));
+r.post('/logout', c.logout);
+r.get('/profile', protect, c.profile);
+r.post('/change-password', protect, asyncHandler(c.changePassword));
+module.exports = r;

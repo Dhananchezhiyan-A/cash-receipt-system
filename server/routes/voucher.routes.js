@@ -1,0 +1,12 @@
+const r = require('express').Router();
+const c = require('../controllers/voucher.controller');
+const { protect } = require('../middleware/auth');
+const asyncHandler = require('../middleware/asyncHandler');
+const validateReceipt = require('../middleware/validateReceipt');
+r.use(protect);
+r.get('/', asyncHandler(c.list));
+r.post('/', validateReceipt('voucher'), asyncHandler(c.create));
+r.get('/:id', asyncHandler(c.get));
+r.put('/:id', validateReceipt('voucher'), asyncHandler(c.update));
+r.delete('/:id', asyncHandler(c.remove));
+module.exports = r;

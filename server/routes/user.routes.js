@@ -1,0 +1,14 @@
+const r = require('express').Router();
+const c = require('../controllers/user.controller');
+const { protect } = require('../middleware/auth');
+const role = require('../middleware/role');
+const asyncHandler = require('../middleware/asyncHandler');
+r.use(protect);
+r.get('/', role('admin', 'manager'), asyncHandler(c.list));
+r.get('/:id', role('admin', 'manager'), asyncHandler(c.get));
+r.post('/', role('admin'), asyncHandler(c.create));
+r.put('/:id', role('admin'), asyncHandler(c.update));
+r.patch('/:id/status', role('admin'), asyncHandler(c.setStatus));
+r.post('/:id/reset-password', role('admin'), asyncHandler(c.resetPassword));
+r.delete('/:id', role('admin'), asyncHandler(c.remove));
+module.exports = r;
