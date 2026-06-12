@@ -110,9 +110,9 @@ export default function ReceiptForm({ type }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <div className="no-print">
-        <h1 className="text-2xl font-semibold text-slate-800">
+        <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">
           {isIn ? 'Cash Receipt (IN)' : 'Cash Receipt (OUT)'}
         </h1>
         <p className="text-sm text-slate-500">
@@ -120,10 +120,10 @@ export default function ReceiptForm({ type }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 receipt-workspace">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 receipt-workspace">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 no-print"
+          className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 space-y-4 no-print"
           noValidate
         >
           <Row>
@@ -182,7 +182,7 @@ export default function ReceiptForm({ type }) {
             {...register('signedBy', { required: 'Signatory is required', validate: nonBlank('Signatory') })}
           />
 
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 pt-2">
             <button type="submit" disabled={isSubmitting} className={primaryButton}>
               <Save size={16} /> {isSubmitting ? 'Saving...' : 'Save'}
             </button>
@@ -198,7 +198,7 @@ export default function ReceiptForm({ type }) {
           </div>
         </form>
 
-        <div ref={previewRef} className="overflow-auto receipt-preview">
+        <div ref={previewRef} className="receipt-preview rounded-xl">
           <ReceiptTemplate type={type} data={liveData} />
         </div>
       </div>
@@ -213,13 +213,13 @@ const Row = ({ children }) => (
 );
 
 const baseInput =
-  'mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm';
+  'mt-1 w-full min-h-11 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm';
 const primaryButton =
-  'inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium';
+  'min-h-11 justify-center inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-medium';
 const secondaryButton =
-  'inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium';
+  'min-h-11 justify-center inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium';
 const resetButton =
-  'inline-flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 disabled:opacity-60 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium';
+  'min-h-11 justify-center inline-flex items-center gap-2 bg-white border border-slate-300 hover:bg-slate-50 disabled:opacity-60 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium';
 
 const Input = forwardRef(function Input({ label, error, ...rest }, ref) {
   return (

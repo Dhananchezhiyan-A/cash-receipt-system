@@ -6,7 +6,7 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 const emptyForm = { name: '', email: '', password: '', role: 'user', active: true };
-const inputClass = 'w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-500';
+const inputClass = 'w-full min-h-11 px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand-500';
 
 export default function UserManagement() {
   const { user: currentUser, can } = useAuth();
@@ -115,16 +115,16 @@ export default function UserManagement() {
   });
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="space-y-5 max-w-full">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-800">User Management</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">User Management</h1>
           <p className="text-sm text-slate-500">{editable ? 'Create and manage system access' : 'Read-only user directory'}</p>
         </div>
-        {editable && <button onClick={openCreate} className="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium"><Plus size={16} /> Create User</button>}
+        {editable && <button onClick={openCreate} className="min-h-11 inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg text-sm font-medium"><Plus size={16} /> Create User</button>}
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="bg-white border border-slate-200 rounded-xl p-3 sm:p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
         <div className="relative md:col-span-2">
           <Search size={16} className="absolute left-3 top-3 text-slate-400" />
           <input value={query.q} onChange={(e) => updateQuery({ q: e.target.value })} placeholder="Search by name or email" className={`${inputClass} pl-9`} />
@@ -137,9 +137,9 @@ export default function UserManagement() {
         </select>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden max-w-full">
+        <div className="overflow-x-auto overscroll-x-contain">
+          <table className="min-w-[760px] w-full text-sm">
             <thead className="bg-slate-50 text-slate-600 text-left">
               <tr>
                 <Sortable label="Name" field="name" query={query} onClick={sort} />
@@ -176,14 +176,14 @@ export default function UserManagement() {
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-sm">
+        <div className="px-3 sm:px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3 text-sm">
           <span className="text-slate-500">{meta.total} users | Page {query.page} of {meta.pages}</span>
-          <div className="flex items-center gap-2">
-            <select value={query.limit} onChange={(e) => updateQuery({ limit: Number(e.target.value) })} className="border border-slate-300 rounded px-2 py-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <select value={query.limit} onChange={(e) => updateQuery({ limit: Number(e.target.value) })} className="min-h-10 border border-slate-300 rounded px-2 py-1">
               <option value="10">10 per page</option><option value="25">25 per page</option><option value="50">50 per page</option>
             </select>
-            <button disabled={query.page <= 1} onClick={() => setQuery((q) => ({ ...q, page: q.page - 1 }))} className="p-1.5 border rounded disabled:opacity-40"><ChevronLeft size={16} /></button>
-            <button disabled={query.page >= meta.pages} onClick={() => setQuery((q) => ({ ...q, page: q.page + 1 }))} className="p-1.5 border rounded disabled:opacity-40"><ChevronRight size={16} /></button>
+            <button disabled={query.page <= 1} onClick={() => setQuery((q) => ({ ...q, page: q.page - 1 }))} className="min-h-10 min-w-10 p-1.5 border rounded disabled:opacity-40"><ChevronLeft size={16} /></button>
+            <button disabled={query.page >= meta.pages} onClick={() => setQuery((q) => ({ ...q, page: q.page + 1 }))} className="min-h-10 min-w-10 p-1.5 border rounded disabled:opacity-40"><ChevronRight size={16} /></button>
           </div>
         </div>
       </div>
@@ -209,26 +209,26 @@ function StatusBadge({ active }) {
 }
 
 function Action({ title, onClick, danger, disabled, children }) {
-  return <button title={title} disabled={disabled} onClick={onClick} className={`p-2 rounded disabled:opacity-30 ${danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-600 hover:bg-slate-100'}`}>{children}</button>;
+  return <button title={title} disabled={disabled} onClick={onClick} className={`min-h-10 min-w-10 p-2 rounded disabled:opacity-30 ${danger ? 'text-red-600 hover:bg-red-50' : 'text-slate-600 hover:bg-slate-100'}`}>{children}</button>;
 }
 
 function Dialog({ title, onClose, children }) {
-  return <div className="fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-4"><div className="bg-white rounded-xl shadow-xl w-full max-w-lg"><div className="px-5 py-4 border-b flex items-center justify-between"><h2 className="font-semibold text-slate-800">{title}</h2><button onClick={onClose} className="text-slate-500"><X size={18} /></button></div>{children}</div></div>;
+  return <div className="fixed inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-3 sm:p-4"><div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[92vh] overflow-y-auto"><div className="px-4 sm:px-5 py-4 border-b flex items-center justify-between gap-3 sticky top-0 bg-white"><h2 className="font-semibold text-slate-800">{title}</h2><button onClick={onClose} className="min-h-10 min-w-10 rounded-lg text-slate-500 hover:bg-slate-100 flex items-center justify-center"><X size={18} /></button></div>{children}</div></div>;
 }
 
 function UserFormDialog({ title, form, setForm, onSubmit, onClose, creating }) {
   const update = (field, value) => setForm((current) => ({ ...current, [field]: value }));
-  return <Dialog title={title} onClose={onClose}><form onSubmit={onSubmit} className="p-5 space-y-4"><Field label="Name"><input required maxLength="100" value={form.name} onChange={(e) => update('name', e.target.value)} className={inputClass} /></Field><Field label="Email"><input required type="email" value={form.email} onChange={(e) => update('email', e.target.value)} className={inputClass} /></Field>{creating && <Field label="Password"><input required minLength="8" type="password" value={form.password} onChange={(e) => update('password', e.target.value)} className={inputClass} /></Field>}<Field label="Role"><select value={form.role} onChange={(e) => update('role', e.target.value)} className={inputClass}><option value="admin">Admin</option><option value="manager">Manager</option><option value="user">User</option></select></Field><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e) => update('active', e.target.checked)} /> Active account</label><DialogActions onClose={onClose} submit="Save User" /></form></Dialog>;
+  return <Dialog title={title} onClose={onClose}><form onSubmit={onSubmit} className="p-4 sm:p-5 space-y-4"><Field label="Name"><input required maxLength="100" value={form.name} onChange={(e) => update('name', e.target.value)} className={inputClass} /></Field><Field label="Email"><input required type="email" value={form.email} onChange={(e) => update('email', e.target.value)} className={inputClass} /></Field>{creating && <Field label="Password"><input required minLength="8" type="password" value={form.password} onChange={(e) => update('password', e.target.value)} className={inputClass} /></Field>}<Field label="Role"><select value={form.role} onChange={(e) => update('role', e.target.value)} className={inputClass}><option value="admin">Admin</option><option value="manager">Manager</option><option value="user">User</option></select></Field><label className="min-h-11 flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e) => update('active', e.target.checked)} /> Active account</label><DialogActions onClose={onClose} submit="Save User" /></form></Dialog>;
 }
 
 function PasswordDialog({ user, form, setForm, onSubmit, onClose }) {
-  return <Dialog title={`Reset Password: ${user.name}`} onClose={onClose}><form onSubmit={onSubmit} className="p-5 space-y-4"><Field label="New Password"><input autoFocus required minLength="8" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={inputClass} /><span className="block mt-1 text-xs text-slate-500">Minimum 8 characters</span></Field><DialogActions onClose={onClose} submit="Reset Password" /></form></Dialog>;
+  return <Dialog title={`Reset Password: ${user.name}`} onClose={onClose}><form onSubmit={onSubmit} className="p-4 sm:p-5 space-y-4"><Field label="New Password"><input autoFocus required minLength="8" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={inputClass} /><span className="block mt-1 text-xs text-slate-500">Minimum 8 characters</span></Field><DialogActions onClose={onClose} submit="Reset Password" /></form></Dialog>;
 }
 
 function ViewDialog({ user, onClose }) {
-  return <Dialog title="User Details" onClose={onClose}><div className="p-5 grid grid-cols-2 gap-4 text-sm"><Detail label="Name" value={user.name} /><Detail label="Email" value={user.email} /><Detail label="Role" value={<RoleBadge role={user.role} />} /><Detail label="Status" value={<StatusBadge active={user.active} />} /><Detail label="Created" value={new Date(user.createdAt).toLocaleString()} /><Detail label="Updated" value={new Date(user.updatedAt).toLocaleString()} /></div></Dialog>;
+  return <Dialog title="User Details" onClose={onClose}><div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm"><Detail label="Name" value={user.name} /><Detail label="Email" value={user.email} /><Detail label="Role" value={<RoleBadge role={user.role} />} /><Detail label="Status" value={<StatusBadge active={user.active} />} /><Detail label="Created" value={new Date(user.createdAt).toLocaleString()} /><Detail label="Updated" value={new Date(user.updatedAt).toLocaleString()} /></div></Dialog>;
 }
 
 const Field = ({ label, children }) => <label className="block"><span className="block mb-1 text-sm font-medium text-slate-700">{label}</span>{children}</label>;
-const Detail = ({ label, value }) => <div><div className="text-xs uppercase text-slate-400">{label}</div><div className="mt-1 text-slate-800">{value}</div></div>;
-const DialogActions = ({ onClose, submit }) => <div className="pt-2 flex justify-end gap-2"><button type="button" onClick={onClose} className="px-4 py-2 border rounded-lg text-sm">Cancel</button><button className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm">{submit}</button></div>;
+const Detail = ({ label, value }) => <div className="min-w-0"><div className="text-xs uppercase text-slate-400">{label}</div><div className="mt-1 text-slate-800 break-words">{value}</div></div>;
+const DialogActions = ({ onClose, submit }) => <div className="pt-2 grid grid-cols-1 sm:flex sm:justify-end gap-2"><button type="button" onClick={onClose} className="min-h-11 px-4 py-2 border rounded-lg text-sm">Cancel</button><button className="min-h-11 px-4 py-2 bg-brand-600 text-white rounded-lg text-sm">{submit}</button></div>;

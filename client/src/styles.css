@@ -2,8 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body, #root { height: 100%; }
-body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+html, body, #root { min-height: 100%; }
+html { overflow-x: hidden; }
+body {
+  margin: 0;
+  overflow-x: hidden;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; }
+#receipt-print-area {
+  max-width: 100%;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.receipt-preview {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.receipt-preview #receipt-print-area {
+  width: min(210mm, 100%);
+}
+table {
+  border-collapse: collapse;
+}
+
+@media (max-width: 640px) {
+  #receipt-print-area {
+    padding: 1rem !important;
+    min-height: auto;
+    font-size: 0.875rem;
+  }
+}
 
 @media print {
   .no-print { display: none !important; }
