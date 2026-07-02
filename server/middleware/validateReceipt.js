@@ -39,7 +39,6 @@ module.exports = (kind) => (req, res, next) => {
   };
 
   const requiredText = [
-    [config.number, 'Number'],
     [config.party, kind === 'receipt' ? 'Received from' : 'Paid to'],
     ['purpose', 'Purpose'],
     ['amountInWords', 'Amount in words'],

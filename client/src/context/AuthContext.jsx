@@ -31,17 +31,16 @@ export function AuthProvider({ children }) {
     window.location.href = '/login';
   };
 
-  const can = (perm) => {
+  const can = (permission) => {
     if (!user) return false;
-    const map = {
-      'users.manage': ['admin'],
-      'users.view': ['admin', 'manager'],
-      'receipt.delete': ['admin'],
-      'reports.viewAll': ['admin', 'manager'],
-      'receipt.viewAll': ['admin', 'manager'],
-      'receipt.create': ['admin', 'manager', 'user'],
-    };
-    return (map[perm] || []).includes(user.role);
+    if (user.role === 'admin') return true;
+    if (user.role === 'manager') {
+      return ['users.view', 'receipt.viewAll', 'receipt.create', 'receipt.edit', 'voucher.viewAll', 'voucher.create', 'voucher.edit', 'dashboard.view'].includes(permission);
+    }
+    if (user.role === 'user') {
+      return ['receipt.viewAll', 'receipt.create', 'receipt.edit', 'voucher.viewAll', 'voucher.create', 'voucher.edit', 'dashboard.view'].includes(permission);
+    }
+    return false;
   };
 
   return (

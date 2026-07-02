@@ -1,24 +1,24 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, ListChecks, LogOut, User, Users, X } from 'lucide-react';
+import { LayoutDashboard, ArrowDownCircle, ArrowUpCircle, ListChecks, LogOut, User, X, Wallet, Users } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/logo.png';
 
 const items = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/receipts/in', label: 'Cash Receipt (IN)', icon: ArrowDownCircle },
-  { to: '/receipts/out', label: 'Cash Receipt (OUT)', icon: ArrowUpCircle },
+  { to: '/receipts/in', label: 'Total Cash Receipt (IN)', icon: ArrowDownCircle },
+  { to: '/receipts/out', label: 'Total Cash Receipt (OUT)', icon: ArrowUpCircle },
+  { to: '/net-balance', label: 'Net Balance', icon: Wallet },
   { to: '/transactions', label: 'Transaction History', icon: ListChecks },
-  { to: '/users', label: 'User Management', icon: Users, permission: 'users.view' },
+  { to: '/users', label: 'User Management', icon: Users, roles: ['admin'] },
 ];
 
 export default function Sidebar({ mobile = false, open = false, onClose = () => {} }) {
-  const { user, logout, can } = useAuth();
-  const visibleItems = items.filter((item) => !item.permission || can(item.permission));
+  const { user, logout } = useAuth();
 
   const sidebar = (
     <aside
       className={`w-72 max-w-[85vw] bg-white border-r border-slate-200 flex flex-col h-full no-print ${
-        mobile ? '' : 'hidden lg:flex lg:sticky lg:top-0 lg:h-screen lg:w-64'
+        mobile ? '' : 'hidden lg:flex lg:fixed lg:left-0 lg:top-0 lg:h-screen lg:w-64 lg:z-30 lg:overflow-y-auto'
       }`}
     >
       <div className="h-16 px-4 border-b border-slate-200 flex items-center justify-between gap-3">
@@ -36,22 +36,26 @@ export default function Sidebar({ mobile = false, open = false, onClose = () => 
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-        {visibleItems.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            onClick={mobile ? onClose : undefined}
-            className={({ isActive }) =>
-              `flex min-h-11 items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
-                isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50'
-              }`
-            }
-          >
-            <Icon size={18} className="shrink-0" />
-            <span className="truncate">{label}</span>
-          </NavLink>
-        ))}
+        {items.map((item) => {
+          const { to, label, icon: Icon, end, roles } = item;
+          if (roles && !roles.includes(user?.role)) return null;
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              onClick={mobile ? onClose : undefined}
+              className={({ isActive }) =>
+                `flex min-h-11 items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition ${
+                  isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-50'
+                }`
+              }
+            >
+              <Icon size={18} className="shrink-0" />
+              <span className="truncate">{label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
 
       <div className="p-3 border-t border-slate-200">

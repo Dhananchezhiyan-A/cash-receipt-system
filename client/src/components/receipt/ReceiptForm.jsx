@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useMemo, useRef } from 'react';
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import { Printer, Download, Save, RotateCcw } from 'lucide-react';
@@ -11,7 +11,6 @@ const MODES = ['Cash', 'UPI', 'Bank Transfer', 'Cheque', 'NEFT', 'RTGS', 'IMPS',
 const MAX_AMOUNT = 999999999.99;
 
 const getDefaultValues = () => ({
-  number: '',
   date: new Date().toISOString().slice(0, 10),
   party: '',
   purpose: '',
@@ -24,6 +23,8 @@ const getDefaultValues = () => ({
 export default function ReceiptForm({ type }) {
   const isIn = type === 'in';
   const previewRef = useRef(null);
+  const [generatedNumber, setGeneratedNumber] = useState('');
+
   const {
     control,
     register,
@@ -36,7 +37,7 @@ export default function ReceiptForm({ type }) {
   const values = useWatch({ control });
   const numericAmount = Number(values.amount);
   const liveData = useMemo(() => ({
-    number: values.number?.trim() || '',
+    number: generatedNumber,
     date: values.date || '',
     party: values.party?.trim() || '',
     purpose: values.purpose?.trim() || '',
@@ -44,7 +45,7 @@ export default function ReceiptForm({ type }) {
     amount: Number.isFinite(numericAmount) ? numericAmount : 0,
     amountInWords: values.amountInWords || 'Zero Rupees Only',
     signedBy: values.signedBy?.trim() || '',
-  }), [values, numericAmount]);
+  }), [values, numericAmount, generatedNumber]);
 
   useEffect(() => {
     setValue('amountInWords', numberToWords(numericAmount), {
@@ -53,7 +54,10 @@ export default function ReceiptForm({ type }) {
     });
   }, [numericAmount, setValue]);
 
-  const handleReset = () => reset(getDefaultValues());
+  const handleReset = () => {
+    reset(getDefaultValues());
+    setGeneratedNumber('');
+  };
 
   const onSubmit = async (formValues) => {
     const amount = Number(formValues.amount);
@@ -71,25 +75,43 @@ export default function ReceiptForm({ type }) {
     const payload = isIn
       ? {
           ...common,
-          receiptNumber: formValues.number.trim(),
           receivedFrom: formValues.party.trim(),
           receivedBy: formValues.signedBy.trim(),
         }
       : {
           ...common,
-          voucherNumber: formValues.number.trim(),
           paidTo: formValues.party.trim(),
           approvedBy: formValues.signedBy.trim(),
         };
 
     try {
-      await api.post(isIn ? '/receipts' : '/vouchers', payload);
+      const { data } = await api.post(isIn ? '/receipts' : '/vouchers', payload);
       toast.success(`${isIn ? 'Receipt' : 'Voucher'} saved successfully`);
       handleReset();
     } catch (error) {
       toast.error(error.response?.data?.message || error.message || 'Unable to save');
     }
   };
+
+  useEffect(() => {
+    // Fetch the next number on mount by looking at the last record
+    const endpoint = isIn ? '/receipts' : '/vouchers';
+    api.get(endpoint, { params: { limit: 1, sortBy: 'createdAt', sortOrder: 'desc' } })
+      .then(({ data }) => {
+        const last = data.items?.[0];
+        const prefix = isIn ? 'RN' : 'VN';
+        let num = 1;
+        if (last) {
+          const key = isIn ? 'receiptNumber' : 'voucherNumber';
+          const match = last[key]?.match(new RegExp(`${prefix}(\\d+)`));
+          if (match) num = parseInt(match[1], 10) + 1;
+        }
+        setGeneratedNumber(`${prefix}${String(num).padStart(4, '0')}`);
+      })
+      .catch(() => {
+        setGeneratedNumber(isIn ? 'RN0001' : 'VN0001');
+      });
+  }, [isIn]);
 
   const getPrintNode = () => previewRef.current?.querySelector('#receipt-print-area');
 
@@ -98,7 +120,7 @@ export default function ReceiptForm({ type }) {
     if (!node) return;
     try {
       await new Promise(requestAnimationFrame);
-      await downloadElementAsPDF(node, `${isIn ? 'Receipt' : 'Voucher'}_${liveData.number || 'untitled'}.pdf`);
+      await downloadElementAsPDF(node, `${isIn ? 'Receipt' : 'Voucher'}_${generatedNumber || 'untitled'}.pdf`);
     } catch {
       toast.error('Unable to generate PDF');
     }
@@ -126,19 +148,20 @@ export default function ReceiptForm({ type }) {
           className="bg-white border border-slate-200 rounded-xl p-4 sm:p-6 space-y-4 no-print"
           noValidate
         >
-          <Row>
-            <Input
-              label={isIn ? 'Receipt Number' : 'Voucher Number'}
-              error={errors.number?.message}
-              {...register('number', { required: 'Number is required', validate: nonBlank('Number') })}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="block">
+              <span className="text-sm font-medium text-slate-700">{isIn ? 'Receipt Number' : 'Voucher Number'}</span>
+              <div className="mt-1 w-full min-h-11 px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-sm text-slate-600 flex items-center">
+                {generatedNumber || 'Generating...'}
+              </div>
+            </div>
             <Input
               label="Date"
               type="date"
               error={errors.date?.message}
               {...register('date', { required: 'Date is required' })}
             />
-          </Row>
+          </div>
 
           <Input
             label={isIn ? 'Received From' : 'Paid To'}
@@ -151,7 +174,7 @@ export default function ReceiptForm({ type }) {
             {...register('purpose', { required: 'Purpose is required', validate: nonBlank('Purpose') })}
           />
 
-          <Row>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select label="Payment Mode" {...register('paymentMode', { required: 'Payment mode is required' })}>
               {MODES.map((mode) => <option key={mode}>{mode}</option>)}
             </Select>
@@ -173,7 +196,7 @@ export default function ReceiptForm({ type }) {
                 },
               })}
             />
-          </Row>
+          </div>
 
           <Input label="Amount in Words" readOnly {...register('amountInWords')} />
           <Input
@@ -207,10 +230,6 @@ export default function ReceiptForm({ type }) {
 }
 
 const nonBlank = (label) => (value) => value?.trim().length > 0 || `${label} cannot be blank`;
-
-const Row = ({ children }) => (
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{children}</div>
-);
 
 const baseInput =
   'mt-1 w-full min-h-11 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none text-sm';

@@ -1,6 +1,6 @@
 const Receipt = require('../models/CashReceipt');
 const Voucher = require('../models/PaymentVoucher');
-const User = require('../models/User');
+const NetBalance = require('../models/NetBalance');
 
 const sum = async (Model, filter) => {
   const result = await Model.aggregate([{ $match: filter }, { $group: { _id: null, total: { $sum: '$amount' } } }]);
@@ -14,9 +14,7 @@ const monthly = async (Model, filter, start) => Model.aggregate([
 ]);
 
 exports.stats = async (req, res) => {
-  const privileged = req.user.role === 'admin' || req.user.role === 'manager';
-  const userScope = privileged ? {} : { createdBy: req.user._id };
-  const base = { deleted: false, ...userScope };
+  const base = { deleted: false };
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -50,6 +48,10 @@ exports.stats = async (req, res) => {
     monthly(Voucher, base, chartStart),
   ]);
 
+  // Calculate net balance from NetBalance ledger (captures receipts, vouchers, and manual additions)
+  const netAgg = await NetBalance.aggregate([{ $group: { _id: null, total: { $sum: '$amount' } } }]);
+  const totalNetBalance = netAgg[0]?.total || 0;
+
   const monthMap = (rows) => new Map(rows.map((row) => [`${row._id.year}-${row._id.month}`, row]));
   const receiptMap = monthMap(receiptMonths);
   const voucherMap = monthMap(voucherMonths);
@@ -64,10 +66,10 @@ exports.stats = async (req, res) => {
     };
   });
 
-  const response = {
+  res.json({
     totalIn,
     totalOut,
-    netBalance: totalIn - totalOut,
+    netBalance: totalNetBalance,
     totalReceipts,
     totalVouchers,
     todayIn,
@@ -76,29 +78,8 @@ exports.stats = async (req, res) => {
     monthOut,
     recentReceipts,
     recentVouchers,
-    recentTransactions: [
-      ...recentReceipts.map((item) => ({ ...item.toObject(), transactionType: 'receipt' })),
-      ...recentVouchers.map((item) => ({ ...item.toObject(), transactionType: 'voucher' })),
-    ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8),
     monthlyData,
-  };
-
-  if (privileged) {
-    const userFilter = { deleted: { $ne: true } };
-    const [totalUsers, activeUsers, inactiveUsers, admins, managers, normalUsers, recentUsers] = await Promise.all([
-      User.countDocuments(userFilter),
-      User.countDocuments({ ...userFilter, active: true }),
-      User.countDocuments({ ...userFilter, active: false }),
-      User.countDocuments({ ...userFilter, role: 'admin' }),
-      User.countDocuments({ ...userFilter, role: 'manager' }),
-      User.countDocuments({ ...userFilter, role: 'user' }),
-      User.find(userFilter).select('-password').sort('-createdAt').limit(5),
-    ]);
-    response.users = { totalUsers, activeUsers, inactiveUsers, admins, managers, normalUsers };
-    response.recentUsers = recentUsers;
-  }
-
-  res.json(response);
+  });
 };
 
 exports.transactions = async (req, res) => {
@@ -107,7 +88,6 @@ exports.transactions = async (req, res) => {
   const safeLimit = Math.min(Math.max(Number(limit) || 25, 1), 100);
   const escaped = String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const base = { deleted: false };
-  if (req.user.role === 'user') base.createdBy = req.user._id;
   if (paymentMode) base.paymentMode = paymentMode;
   if (from || to) {
     base.date = {};
@@ -134,6 +114,31 @@ exports.transactions = async (req, res) => {
   const all = [...normalize(receipts, 'receipt'), ...normalize(vouchers, 'voucher')]
     .sort((a, b) => (new Date(a.date) - new Date(b.date)) * direction);
   const start = (safePage - 1) * safeLimit;
+  // Attach latest net-balance audit (previous/updated) for each transaction if available
+  try {
+    const ids = all.map((it) => it._id);
+    if (ids.length > 0) {
+      const netAgg = await NetBalance.aggregate([
+        { $match: { transactionId: { $in: ids } } },
+        { $sort: { date: -1 } },
+        { $group: { _id: '$transactionId', doc: { $first: '$$ROOT' } } },
+      ]);
+      const balanceMap = new Map(netAgg.map((r) => [String(r._id), r.doc]));
+      all.forEach((item) => {
+        const entry = balanceMap.get(String(item._id));
+        if (entry) {
+          item.previousBalance = entry.previousBalance;
+          item.updatedBalance = entry.updatedBalance;
+        } else {
+          item.previousBalance = null;
+          item.updatedBalance = null;
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Failed to attach net balance audit to transactions:', err);
+  }
+
   res.json({
     items: all.slice(start, start + safeLimit),
     total: all.length,

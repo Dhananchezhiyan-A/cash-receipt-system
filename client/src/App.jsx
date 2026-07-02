@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import ReceiptIn from './pages/ReceiptIn/ReceiptIn';
 import ReceiptOut from './pages/ReceiptOut/ReceiptOut';
 import ReceiptList from './pages/ReceiptList/ReceiptList';
+import NetBalance from './pages/NetBalance';
 import UserManagement from './pages/Users/UserManagement';
 import NotFound from './pages/NotFound/NotFound';
 
@@ -19,7 +20,8 @@ export default function App() {
         <Route path="/receipts/out" element={<ReceiptOut />} />
         <Route path="/receipts" element={<ReceiptList />} />
         <Route path="/transactions" element={<ReceiptList />} />
-        <Route path="/users" element={<ProtectedRoute roles={['admin', 'manager']}><UserManagement /></ProtectedRoute>} />
+        <Route path="/net-balance" element={<NetBalance />} />
+        <Route path="/users" element={<UserManagement />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

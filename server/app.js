@@ -10,6 +10,7 @@ const userRoutes = require('./routes/user.routes');
 const receiptRoutes = require('./routes/receipt.routes');
 const voucherRoutes = require('./routes/voucher.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const netBalanceRoutes = require('./routes/netBalance');
 const errorHandler = require('./middleware/error');
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/receipts', receiptRoutes);
 app.use('/api/vouchers', voucherRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/net-balance', netBalanceRoutes);
 
 app.use(errorHandler);
 module.exports = app;

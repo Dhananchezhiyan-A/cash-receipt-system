@@ -28,7 +28,7 @@ export default function AppLayout() {
 
       <Sidebar mobile open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
-      <main className="w-full min-w-0 flex-1 px-3 py-4 sm:px-5 sm:py-6 lg:px-6">
+      <main className="w-full min-w-0 flex-1 px-3 py-4 sm:px-5 sm:py-6 lg:px-6 lg:ml-64">
         <div className="mx-auto w-full max-w-[1600px]">
           <Outlet />
         </div>
